@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0d12">
+  <meta name="description" content="Zyvora Code — محیط مدرن توسعه وب">
+  <title>Zyvora Code</title>
+
+  <!-- Monaco Editor and JSZip are loaded from CDN; the app itself is a single HTML file. -->
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0d12;
+      --panel: #10131b;
+      --panel-2: #151925;
+      --panel-3: #1a2030;
+      --border: #252c3b;
+      --text: #e8edf7;
+      --muted: #8d98ad;
+      --accent: #8b5cf6;
+      --accent-2: #22d3ee;
+      --success: #4ade80;
+      --danger: #fb7185;
+      --header-h: 58px;
+      --status-h: 25px;
+      --radius: 12px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; }
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    body {
+      min-width: 320px;
+      min-height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Tahoma, "Segoe UI", system-ui, sans-serif;
+      font-size: 13px;
+    }
+    button, input, textarea, select { font: inherit; }
+    button { color: inherit; cursor: pointer; touch-action: manipulation; }
+    button:focus-visible, input:focus-visible, textarea:focus-visible {
+      outline: 2px solid var(--accent-2); outline-offset: 2px;
+    }
+    .app { display: flex; flex-direction: column; width: 100%; height: 100vh; height: 100dvh; overflow: hidden; }
+    .topbar {
+      height: var(--header-h); flex: 0 0 var(--header-h); display: flex; align-items: center;
+      gap: 12px; padding: 0 16px; border-bottom: 1px solid var(--border);
+      background: rgba(16,19,27,.96); z-index: 5;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; min-width: 175px; }
+    .brand-mark {
+      display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px;
+      color: white; font-weight: 900; font-size: 17px;
+      background: linear-gradient(140deg, #8b5cf6, #4f46e5 58%, #22d3ee);
+      box-shadow: 0 0 24px #8b5cf633;
+    }
+    .brand-name { font-size: 15px; font-weight: 800; letter-spacing: -.3px; }
+    .brand-name span { color: #a78bfa; }
+    .brand-sub { color: var(--muted); font-size: 10px; margin-top: 2px; }
+    .top-center { flex: 1; display: flex; justify-content: center; min-width: 0; }
+    .project-pill {
+      display: flex; align-items: center; gap: 8px; min-width: 0; max-width: 320px;
+      padding: 8px 13px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px;
+      color: #d5dced;
+    }
+    .project-pill span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .top-actions { display: flex; align-items: center; gap: 7px; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      min-height: 35px; padding: 7px 11px; border: 1px solid var(--border); border-radius: 9px;
+      background: var(--panel-2); color: var(--text); transition: .16s ease; white-space: nowrap;
+    }
+    .btn:hover { border-color: #555f79; background: var(--panel-3); }
+    .btn.primary { background: linear-gradient(120deg, #7c3aed, #5b4de4); border-color: transparent; color: white; }
+    .btn.primary:hover { filter: brightness(1.1); }
+    .btn.icon-only { width: 36px; padding: 0; }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+    .main { flex: 1; display: flex; min-height: 0; min-width: 0; overflow: hidden; }
+    .activitybar {
+      width: 52px; flex: 0 0 52px; display: flex; flex-direction: column; align-items: center; gap: 8px;
+      padding: 12px 0; background: #0e1118; border-left: 1px solid var(--border);
+    }
+    .activity-btn {
+      position: relative; width: 38px; height: 40px; border: 0; border-radius: 9px;
+      background: transparent; color: #7f8ba2; font-size: 16px;
+    }
+    .activity-btn:hover, .activity-btn.active { background: #1c2030; color: #c4b5fd; }
+    .activity-btn.active::before {
+      content: ""; position: absolute; right: -7px; top: 9px; bottom: 9px; width: 3px;
+      border-radius: 4px; background: var(--accent-2);
+    }
+    .activity-spacer { flex: 1; }
+    .sidebar {
+      width: 218px; flex: 0 0 218px; display: flex; flex-direction: column; min-width: 0;
+      background: var(--panel); border-left: 1px solid var(--border);
+    }
+    .side-heading {
+      height: 46px; display: flex; align-items: center; justify-content: space-between; padding: 0 13px;
+      font-size: 11px; color: #aab5c9; font-weight: 800; letter-spacing: .4px;
+    }
+    .mini-actions { display: flex; gap: 5px; }
+    .mini-btn { border: 0; background: transparent; color: var(--muted); padding: 6px; border-radius: 6px; }
+    .mini-btn:hover { background: var(--panel-3); color: white; }
+    .project-root { padding: 7px 10px; display: flex; align-items: center; gap: 8px; color: #d8def0; font-weight: 700; }
+    .file-list { overflow: auto; padding: 4px 7px 14px; }
+    .file-row {
+      display: flex; align-items: center; gap: 8px; min-height: 34px; padding: 5px 8px;
+      border-radius: 7px; cursor: pointer; color: #aeb9cc; user-select: none;
+    }
+    .file-row:hover { background: #191e2b; }
+    .file-row.active { background: #29233f; color: #f0eaff; }
+    .file-row .file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+    .file-row .delete-file { opacity: 0; border: 0; background: transparent; color: #fb7185; padding: 3px; }
+    .file-row:hover .delete-file { opacity: 1; }
+    .file-icon.html { color: #fb923c; } .file-icon.css { color: #60a5fa; }
+    .file-icon.js { color: #facc15; } .file-icon.json { color: #a78bfa; }
+    .file-icon.md { color: #9ca3af; } .file-icon.other { color: #94a3b8; }
+    .side-footer { margin-top: auto; border-top: 1px solid var(--border); padding: 11px 12px; color: var(--muted); font-size: 11px; }
+    .saved-indicator { display: flex; align-items: center; gap: 7px; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); box-shadow: 0 0 8px #4ade8055; }
+    .center { display: flex; flex: 1; min-width: 0; min-height: 0; flex-direction: column; background: #0d1017; }
+    .tabbar {
+      height: 42px; flex: 0 0 42px; display: flex; align-items: stretch; gap: 2px; overflow-x: auto;
+      background: #11141c; border-bottom: 1px solid var(--border); scrollbar-width: thin;
+    }
+    .tab {
+      display: flex; align-items: center; gap: 8px; min-width: 110px; max-width: 190px; padding: 0 13px;
+      background: transparent; border: 0; border-left: 1px solid #202535; color: #8f9ab0; white-space: nowrap;
+    }
+    .tab.active { background: #0d1017; color: #e5eaf5; border-top: 2px solid var(--accent); }
+    .tab-name { overflow: hidden; text-overflow: ellipsis; }
+    .tab-unsaved { color: var(--accent-2); }
+    .editor-toolbar {
+      height: 39px; flex: 0 0 39px; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 12px; border-bottom: 1px solid #1b2030; color: var(--muted); font-size: 11px; gap: 8px;
+    }
+    .breadcrumbs { display: flex; gap: 7px; align-items: center; overflow: hidden; white-space: nowrap; }
+    .toolbar-actions { display: flex; align-items: center; gap: 5px; }
+    .tool-btn { border: 0; background: transparent; color: #9aa6bc; border-radius: 6px; padding: 6px 8px; }
+    .tool-btn:hover { color: white; background: #202638; }
+    #editor { flex: 1; min-height: 0; min-width: 0; width: 100%; }
+    .editor-fallback { width: 100%; height: 100%; resize: none; background: #0d1017; color: #d9e2f2; border: 0; padding: 15px; outline: none; font: 13px/1.65 Consolas, Monaco, monospace; direction: ltr; text-align: left; tab-size: 2; }
+    .bottom-panel { height: 190px; flex: 0 0 190px; border-top: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; }
+    .bottom-head { height: 38px; flex: 0 0 38px; display: flex; align-items: center; gap: 18px; padding: 0 13px; border-bottom: 1px solid #202535; }
+    .bottom-tab { height: 100%; display: flex; align-items: center; border: 0; border-bottom: 2px solid transparent; background: transparent; color: #8793a9; font-size: 11px; }
+    .bottom-tab.active { color: #e7ecf6; border-bottom-color: var(--accent-2); }
+    .console-content { flex: 1; overflow: auto; padding: 8px 12px; color: #9da9bd; font: 12px/1.8 Consolas, monospace; direction: ltr; text-align: left; }
+    .console-line { white-space: pre-wrap; overflow-wrap: anywhere; }
+    .console-line.error { color: #fb7185; } .console-line.success { color: #86efac; }
+    .preview-panel {
+      width: 34%; min-width: 240px; max-width: 520px; flex: 0 0 34%; display: flex; flex-direction: column;
+      background: #11151e; border-right: 1px solid var(--border); min-height: 0;
+    }
+    .preview-head {
+      min-height: 47px; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding: 7px 10px; border-bottom: 1px solid var(--border);
+    }
+    .preview-title { display: flex; align-items: center; gap: 8px; font-weight: 800; }
+    .preview-title i { color: var(--accent-2); }
+    .preview-actions { display: flex; gap: 5px; }
+    .preview-actions .btn { min-height: 30px; padding: 5px 8px; font-size: 11px; }
+    .preview-frame-wrap { flex: 1; min-height: 0; padding: 10px; background: #0b0d12; }
+    #previewFrame { display: block; width: 100%; height: 100%; border: 1px solid #252b39; border-radius: 9px; background: white; }
+    .ai-panel {
+      display: none; width: 34%; min-width: 240px; max-width: 520px; flex: 0 0 34%;
+      flex-direction: column; min-height: 0; background: #11151e; border-right: 1px solid var(--border);
+    }
+    .ai-panel.open { display: flex; }
+    .ai-head { display: flex; align-items: center; justify-content: space-between; padding: 14px; border-bottom: 1px solid var(--border); }
+    .ai-title { font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .ai-title i { color: #c4b5fd; }
+    .ai-content { flex: 1; overflow: auto; padding: 15px; }
+    .ai-welcome { border: 1px solid #34304f; border-radius: 12px; padding: 14px; background: linear-gradient(145deg,#211a38,#151925); }
+    .ai-welcome h3 { margin: 0 0 8px; font-size: 14px; }
+    .ai-welcome p { color: #a7b0c4; line-height: 1.9; margin: 0; font-size: 12px; }
+    .ai-hint { margin-top: 13px; padding: 10px; border-radius: 9px; background: #0d1017; color: var(--muted); font-size: 11px; line-height: 1.8; }
+    .ai-form { padding: 12px; border-top: 1px solid var(--border); }
+    .ai-input { width: 100%; min-height: 84px; resize: vertical; border: 1px solid #30374a; border-radius: 10px; padding: 10px; color: var(--text); background: #0d1017; outline: none; }
+    .ai-form-row { display: flex; justify-content: space-between; gap: 8px; margin-top: 8px; }
+    .statusbar {
+      height: var(--status-h); flex: 0 0 var(--status-h); display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; padding: 0 10px; background: #5140b8; color: #fff; font-size: 10px; overflow: hidden;
+    }
+    .status-group { display: flex; align-items: center; gap: 13px; white-space: nowrap; min-width: 0; }
+    .status-group span { overflow: hidden; text-overflow: ellipsis; }
+    .mobile-nav { display: none; }
+    .toast {
+      position: fixed; z-index: 100; bottom: 42px; left: 50%; transform: translate(-50%, 12px);
+      max-width: calc(100vw - 28px); background: #202638; color: #f1f5fb; border: 1px solid #39425a;
+      padding: 11px 15px; border-radius: 10px; box-shadow: 0 12px 40px #0008; opacity: 0; pointer-events: none;
+      transition: .2s; text-align: center; line-height: 1.6;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .modal-backdrop { position: fixed; inset: 0; z-index: 50; background: #03050bc9; display: none; align-items: center; justify-content: center; padding: 16px; }
+    .modal-backdrop.show { display: flex; }
+    .modal { width: min(430px, 100%); background: #141925; border: 1px solid #333b50; border-radius: 14px; padding: 19px; box-shadow: 0 20px 70px #0009; }
+    .modal h3 { margin: 0 0 8px; }
+    .modal p { color: var(--muted); line-height: 1.8; font-size: 12px; }
+    .modal input { width: 100%; background: #0b0e15; border: 1px solid #333b50; border-radius: 9px; padding: 11px; color: white; margin: 8px 0 14px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
+    .hidden { display: none !important; }
+
+    @media (max-width: 1100px) {
+      .preview-panel, .ai-panel { width: 31%; flex-basis: 31%; min-width: 210px; }
+      .sidebar { width: 190px; flex-basis: 190px; }
+      .brand { min-width: 150px; }
+      .topbar { padding: 0 10px; gap: 8px; }
+    }
+    @media (max-width: 850px) {
+      .brand { min-width: 40px; }
+      .brand-copy, .project-pill .project-meta, .top-actions .btn-label { display: none; }
+      .top-center { justify-content: flex-start; }
+      .sidebar { width: 180px; flex-basis: 180px; }
+      .preview-panel, .ai-panel { min-width: 0; width: 42%; flex-basis: 42%; }
+      .bottom-panel { height: 145px; flex-basis: 145px; }
+    }
+    @media (max-width: 640px) {
+      :root { --header-h: 54px; --status-h: 23px; }
+      body { min-width: 320px; }
+      .topbar { gap: 7px; padding: 0 9px; }
+      .brand { min-width: 0; gap: 7px; }
+      .brand-mark { width: 32px; height: 32px; font-size: 15px; }
+      .brand-name { font-size: 13px; }
+      .brand-sub { display: none; }
+      .top-center { display: none; }
+      .top-actions { margin-right: auto; gap: 5px; }
+      .top-actions .btn { min-height: 34px; padding: 6px 9px; }
+      .top-actions .btn.icon-only { width: 34px; }
+      .main { position: relative; }
+      .activitybar { display: none; }
+      .sidebar {
+        display: none; position: absolute; z-index: 20; inset: 0 auto 0 0;
+        width: min(82vw, 290px); flex-basis: auto; box-shadow: 12px 0 45px #0009;
+      }
+      .sidebar.mobile-open { display: flex; }
+      .center { width: 100%; }
+      .preview-panel, .ai-panel {
+        display: none; position: absolute; inset: 0; z-index: 15; width: 100%; max-width: none; min-width: 0; flex-basis: auto;
+      }
+      .preview-panel.mobile-open, .ai-panel.mobile-open { display: flex; }
+      .tabbar { height: 39px; flex-basis: 39px; }
+      .tab { min-width: 105px; padding: 0 10px; }
+      .editor-toolbar { height: 35px; flex-basis: 35px; padding: 0 8px; }
+      .breadcrumbs { max-width: 55%; }
+      .toolbar-actions .tool-btn { padding: 6px; }
+      .bottom-panel { height: 118px; flex-basis: 118px; }
+      .bottom-head { height: 33px; flex-basis: 33px; }
+      .console-content { font-size: 11px; }
+      .mobile-nav {
+        display: flex; height: 48px; flex: 0 0 48px; align-items: stretch; justify-content: space-around;
+        background: #11141c; border-top: 1px solid var(--border); padding-bottom: env(safe-area-inset-bottom, 0);
+      }
+      .mobile-nav button {
+        flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 3px;
+        border: 0; background: transparent; color: #8995ac; font-size: 10px;
+      }
+      .mobile-nav button i { font-size: 15px; }
+      .mobile-nav button.active { color: #c4b5fd; }
+      .status-group { gap: 8px; }
+      .status-group .status-hide-mobile { display: none; }
+      .toast { bottom: 82px; }
+    }
+    @media (max-width: 380px) {
+      .brand-name { font-size: 12px; }
+      .top-actions { gap: 4px; }
+      .top-actions .btn { padding: 6px 7px; }
+      .bottom-panel { height: 100px; flex-basis: 100px; }
+      .statusbar { padding: 0 6px; font-size: 9px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">Z</div>
+      <div class="brand-copy">
+        <div class="brand-name">Zyvora <span>Code</span></div>
+        <div class="brand-sub">BUILD SOMETHING DIFFERENT</div>
+      </div>
+    </div>
+    <div class="top-center">
+      <div class="project-pill"><i class="fa-solid fa-cubes-stacked" style="color:#a78bfa"></i><span id="projectTitle">my-zyvora-project</span><span class="project-meta" style="color:#7f8ba2">/ workspace</span></div>
+    </div>
+    <div class="top-actions">
+      <button class="btn icon-only" id="openFilesBtn" title="فایل‌ها" aria-label="فایل‌ها"><i class="fa-regular fa-folder-open"></i></button>
+      <button class="btn" id="importBtn"><i class="fa-solid fa-file-arrow-up"></i><span class="btn-label">ورود فایل</span></button>
+      <button class="btn" id="downloadBtn"><i class="fa-solid fa-download"></i><span class="btn-label">دانلود ZIP</span></button>
+      <button class="btn primary" id="runBtn"><i class="fa-solid fa-play"></i><span class="btn-label">اجرا</span></button>
+    </div>
+  </header>
+
+  <main class="main">
+    <nav class="activitybar" aria-label="ابزارها">
+      <button class="activity-btn active" data-action="files" title="فایل‌ها"><i class="fa-regular fa-folder-open"></i></button>
+      <button class="activity-btn" data-action="search" title="جست‌وجو"><i class="fa-solid fa-magnifying-glass"></i></button>
+      <button class="activity-btn" data-action="ai" title="دستیار هوش مصنوعی"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
+      <div class="activity-spacer"></div>
+      <button class="activity-btn" id="settingsBtn" title="راهنما"><i class="fa-solid fa-gear"></i></button>
+    </nav>
+
+    <aside class="sidebar" id="sidebar">
+      <div class="side-heading">
+        <span>EXPLORER</span>
+        <div class="mini-actions">
+          <button class="mini-btn" id="newFileBtn" title="فایل جدید"><i class="fa-regular fa-file"></i></button>
+          <button class="mini-btn" id="renameProjectBtn" title="تغییر نام پروژه"><i class="fa-solid fa-pen"></i></button>
+        </div>
+      </div>
+      <div class="project-root"><i class="fa-solid fa-chevron-down" style="font-size:10px"></i><i class="fa-regular fa-folder-open" style="color:#a78bfa"></i><span id="rootName">MY-ZYVORA-PROJECT</span></div>
+      <div class="file-list" id="fileList"></div>
+      <div class="side-footer">
+        <div class="saved-indicator"><span class="dot"></span><span id="saveState">ذخیره در مرورگر فعال است</span></div>
+      </div>
+    </aside>
+
+    <section class="center">
+      <div class="tabbar" id="tabbar"></div>
+      <div class="editor-toolbar">
+        <div class="breadcrumbs"><i class="fa-solid fa-code" style="color:#a78bfa"></i><span id="breadcrumbName">index.html</span><span>/</span><span id="languageLabel">HTML</span></div>
+        <div class="toolbar-actions">
+          <button class="tool-btn" id="formatHintBtn" title="راهنمای ویرایش"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
+          <button class="tool-btn" id="togglePreviewBtn" title="پیش‌نمایش"><i class="fa-regular fa-window-maximize"></i></button>
+        </div>
+      </div>
+      <div id="editor"><textarea id="fallbackEditor" class="editor-fallback" spellcheck="false" aria-label="ویرایشگر کد"></textarea></div>
+      <section class="bottom-panel">
+        <div class="bottom-head">
+          <button class="bottom-tab active" data-bottom="console">CONSOLE</button>
+          <button class="bottom-tab" data-bottom="problems">PROBLEMS</button>
+          <button class="bottom-tab" data-bottom="output">OUTPUT</button>
+        </div>
+        <div class="console-content" id="consoleContent"><div class="console-line success">Zyvora Code ready. Run your project to see the output.</div></div>
+      </section>
+    </section>
+
+    <aside class="preview-panel" id="previewPanel">
+      <div class="preview-head">
+        <div class="preview-title"><i class="fa-solid fa-display"></i><span>Live Preview</span></div>
+        <div class="preview-actions">
+          <button class="btn" id="refreshPreviewBtn" title="اجرای دوباره"><i class="fa-solid fa-rotate-right"></i></button>
+          <button class="btn" id="popoutPreviewBtn" title="بازکردن پیش‌نمایش در تب جدید"><i class="fa-solid fa-arrow-up-right-from-square"></i></button>
+          <button class="btn" id="closePreviewBtn" title="بستن"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+      <div class="preview-frame-wrap"><iframe id="previewFrame" title="پیش‌نمایش پروژه" sandbox="allow-scripts allow-forms allow-modals allow-popups"></iframe></div>
+    </aside>
+
+    <aside class="ai-panel" id="aiPanel">
+      <div class="ai-head">
+        <div class="ai-title"><i class="fa-solid fa-wand-magic-sparkles"></i><span>Zyvora AI</span></div>
+        <button class="mini-btn" id="closeAiBtn" aria-label="بستن دستیار"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="ai-content">
+        <div class="ai-welcome">
+          <h3>ایده‌ات را به کد تبدیل کن.</h3>
+          <p>دستیار Zyvora اینجا آماده اتصال به سرویس هوش مصنوعی است. برای فعال‌شدن پاسخ واقعی، یک API امن یا بک‌اند واسط لازم است.</p>
+        </div>
+        <div class="ai-hint"><i class="fa-solid fa-shield-halved"></i> کلید API خصوصی را در این فایل عمومی قرار نده. GitHub Pages کدهای سمت کاربر را برای همه قابل مشاهده می‌کند.</div>
+        <div id="aiMessages" style="margin-top:14px"></div>
+      </div>
+      <form class="ai-form" id="aiForm">
+        <textarea id="aiPrompt" class="ai-input" placeholder="مثلاً: یک کارت محصول با CSS بساز..." aria-label="پیام به دستیار"></textarea>
+        <div class="ai-form-row">
+          <span style="color:var(--muted);font-size:10px;align-self:center">حالت: آماده اتصال</span>
+          <button class="btn primary" type="submit"><i class="fa-solid fa-paper-plane"></i> ارسال</button>
+        </div>
+      </form>
+    </aside>
+  </main>
+
+  <nav class="mobile-nav" aria-label="ناوبری موبایل">
+    <button class="active" data-mobile="editor"><i class="fa-solid fa-code"></i><span>کدنویسی</span></button>
+    <button data-mobile="files"><i class="fa-regular fa-folder-open"></i><span>فایل‌ها</span></button>
+    <button data-mobile="preview"><i class="fa-solid fa-display"></i><span>پیش‌نمایش</span></button>
+    <button data-mobile="ai"><i class="fa-solid fa-wand-magic-sparkles"></i><span>هوش مصنوعی</span></button>
+  </nav>
+
+  <footer class="statusbar">
+    <div class="status-group">
+      <span><i class="fa-solid fa-code-branch"></i> main*</span>
+      <span><i class="fa-regular fa-circle-check"></i> Ready</span>
+      <span class="status-hide-mobile" id="statusMessage">Zyvora Workspace</span>
+    </div>
+    <div class="status-group">
+      <span id="cursorStatus">Ln 1, Col 1</span>
+      <span id="encodingStatus">UTF-8</span>
+      <span id="statusLanguage">HTML</span>
+    </div>
+  </footer>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h3 id="modalTitle">عنوان</h3>
+    <p id="modalDescription"></p>
+    <input id="modalInput" type="text" autocomplete="off">
+    <div class="modal-actions">
+      <button class="btn" id="modalCancel">انصراف</button>
+      <button class="btn primary" id="modalConfirm">تأیید</button>
+    </div>
+  </div>
+</div>
+<input id="filePicker" type="file" multiple accept=".html,.htm,.css,.js,.json,.md,.txt,.svg,.xml" class="hidden">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min/vs/loader.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+(() => {
+  "use strict";
+
+  const STORAGE_KEY = "zyvora-code-workspace-v1";
+  const $ = (id) => document.getElementById(id);
+  const starterFiles = {
+    "index.html": `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Zyvora Project</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="hero">
+    <div class="badge">✦ BUILT WITH ZYVORA</div>
+    <h1>Ideas become <span>reality.</span></h1>
+    <p>Your next project starts here. Edit this page and watch it update.</p>
+    <button id="helloBtn">Try it out ↗</button>
+  </main>
+  <script src="script.js"><\/script>
+</body>
+</html>`,
+    "style.css": `* { box-sizing: border-box; }
+body {
+  margin: 0; min-height: 100vh; display: grid; place-items: center;
+  font-family: Inter, system-ui, sans-serif; color: #eef2ff;
+  background: radial-gradient(ellipse at 50% 0%, #29205b 0%, #101321 55%, #090b12 100%);
+}
+.hero { width: min(680px, 90%); text-align: center; padding: 55px 24px; }
+.badge { display: inline-block; padding: 8px 12px; border: 1px solid #51418a; border-radius: 999px; color: #c4b5fd; font-size: 11px; letter-spacing: 2px; }
+h1 { font-size: clamp(2.2rem, 7vw, 4.8rem); line-height: 1.1; letter-spacing: -3px; margin: 24px 0 16px; }
+h1 span { background: linear-gradient(90deg, #a78bfa, #67e8f9); color: transparent; background-clip: text; }
+p { color: #a6b0c6; line-height: 1.8; }
+button { border: 0; border-radius: 10px; margin-top: 16px; padding: 13px 21px; color: white; font-weight: 700; background: linear-gradient(110deg, #8b5cf6, #4f46e5); cursor: pointer; }
+button:hover { filter: brightness(1.15); }`,
+    "script.js": `document.getElementById("helloBtn")?.addEventListener("click", () => {
+  alert("Welcome to Zyvora Code!");
+  console.log("Zyvora project is running.");
+});`,
+    "README.md": `# My Zyvora Project
+
+A starter web project created with Zyvora Code.
+
+## Files
+- \`index.html\` — page structure
+- \`style.css\` — styles
+- \`script.js\` — interactions
+
+Edit the files and press **Run** to preview your changes.`
+  };
+
+  let state = {
+    projectName: "my-zyvora-project",
+    files: {...starterFiles},
+    activeFile: "index.html",
+    openFiles: ["index.html", "style.css", "script.js"],
+    editorContents: {},
+    activeBottom: "console"
+  };
+  let editor = null;
+  let currentModel = null;
+  let toastTimer = null;
+  let modalResolve = null;
+  let editorReady = false;
+  let suppressEditorChange = false;
+  let previewVisible = true;
+  let mobileView = "editor";
+
+  function toast(message) {
+    const node = $("toast");
+    node.textContent = message;
+    node.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => node.classList.remove("show"), 2600);
+  }
+
+  function askModal({title, description = "", placeholder = "", value = "", confirmText = "تأیید"}) {
+    $("modalTitle").textContent = title;
+    $("modalDescription").textContent = description;
+    $("modalInput").placeholder = placeholder;
+    $("modalInput").value = value;
+    $("modalConfirm").textContent = confirmText;
+    $("modalBackdrop").classList.add("show");
+    setTimeout(() => $("modalInput").focus(), 20);
+    return new Promise(resolve => { modalResolve = resolve; });
+  }
+  function closeModal(result) {
+    $("modalBackdrop").classList.remove("show");
+    if (modalResolve) modalResolve(result);
+    modalResolve = null;
+  }
+  $("modalCancel").addEventListener("click", () => closeModal(null));
+  $("modalConfirm").addEventListener("click", () => closeModal($("modalInput").value.trim()));
+  $("modalBackdrop").addEventListener("click", e => { if (e.target === $("modalBackdrop")) closeModal(null); });
+  $("modalInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") { e.preventDefault(); closeModal($("modalInput").value.trim()); }
+    if (e.key === "Escape") closeModal(null);
+  });
+
+  function fileLanguage(name) {
+    const ext = name.split(".").pop().toLowerCase();
+    return ({html:"html",htm:"html",css:"css",js:"javascript",mjs:"javascript",cjs:"javascript",json:"json",md:"markdown",svg:"xml",xml:"xml",txt:"plaintext"})[ext] || "plaintext";
+  }
+  function fileIcon(name) {
+    const ext = name.split(".").pop().toLowerCase();
+    if (["html","htm"].includes(ext)) return ["fa-brands fa-html5","html"];
+    if (ext === "css") return ["fa-brands fa-css3-alt","css"];
+    if (["js","mjs","cjs"].includes(ext)) return ["fa-brands fa-js","js"];
+    if (ext === "json") return ["fa-solid fa-brackets-curly","json"];
+    if (ext === "md") return ["fa-brands fa-markdown","md"];
+    return ["fa-regular fa-file-code","other"];
+  }
+  function currentCode() {
+    if (editor && editorReady && state.activeFile) {
+      state.files[state.activeFile] = editor.getValue();
+    }
+    return state.files[state.activeFile] || "";
+  }
+  function syncActiveToState() {
+    if (editor && editorReady && state.activeFile) state.files[state.activeFile] = editor.getValue();
+  }
+  function persist(showState = false) {
+    syncActiveToState();
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      $("saveState").textContent = "ذخیره در مرورگر فعال است";
+      if (showState) toast("پروژه در همین مرورگر ذخیره شد.");
+    } catch (e) {
+      $("saveState").textContent = "فضای ذخیره‌سازی پر است";
+      if (showState) toast("ذخیره‌سازی مرورگر انجام نشد؛ پروژه را دانلود کن.");
+    }
+  }
+  function restore() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+      if (saved && saved.files && typeof saved.files === "object") {
+        state = {
+          projectName: typeof saved.projectName === "string" ? saved.projectName : "my-zyvora-project",
+          files: {...saved.files},
+          activeFile: saved.files[saved.activeFile] !== undefined ? saved.activeFile : Object.keys(saved.files)[0],
+          openFiles: Array.isArray(saved.openFiles) ? saved.openFiles.filter(n => saved.files[n] !== undefined) : [],
+          editorContents: {},
+          activeBottom: saved.activeBottom || "console"
+        };
+        if (!state.activeFile) {
+          state.files = {...starterFiles}; state.activeFile = "index.html";
+        }
+        if (!state.openFiles.includes(state.activeFile)) state.openFiles.push(state.activeFile);
+      }
+    } catch (_) {}
+  }
+
+  function renderFiles() {
+    $("fileList").replaceChildren();
+    const names = Object.keys(state.files).sort((a,b) => {
+      const ai = a === "index.html" ? -1 : 0, bi = b === "index.html" ? -1 : 0;
+      return ai - bi || a.localeCompare(b);
+    });
+    names.forEach(name => {
+      const row = document.createElement("div");
+      row.className = "file-row" + (name === state.activeFile ? " active" : "");
+      row.title = name;
+      const [icon, kind] = fileIcon(name);
+      const iconNode = document.createElement("i");
+      iconNode.className = icon + " file-icon " + kind;
+      const label = document.createElement("span");
+      label.className = "file-name"; label.textContent = name;
+      const del = document.createElement("button");
+      del.className = "delete-file"; del.title = "حذف " + name; del.setAttribute("aria-label", del.title);
+      del.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+      del.addEventListener("click", async e => {
+        e.stopPropagation();
+        if (Object.keys(state.files).length <= 1) { toast("حداقل یک فایل باید در پروژه باقی بماند."); return; }
+        const yes = await askModal({title:"حذف فایل", description:`فایل «${name}» از پروژه حذف شود؟`, placeholder:"برای تأیید، نام فایل را وارد کن"});
+        if (yes !== name) { if (yes !== null) toast("نام فایل مطابقت نداشت."); return; }
+        syncActiveToState();
+        delete state.files[name];
+        state.openFiles = state.openFiles.filter(n => n !== name);
+        if (state.activeFile === name) state.activeFile = state.openFiles[0] || Object.keys(state.files)[0];
+        loadActiveFile(); renderFiles(); renderTabs(); persist(); toast("فایل حذف شد.");
+      });
+      row.append(iconNode, label, del);
+      row.addEventListener("click", () => openFile(name));
+      $("fileList").append(row);
+    });
+    $("rootName").textContent = state.projectName.toUpperCase();
+    $("projectTitle").textContent = state.projectName;
+  }
+
+  function renderTabs() {
+    $("tabbar").replaceChildren();
+    const tabs = state.openFiles.filter(n => state.files[n] !== undefined);
+    tabs.forEach(name => {
+      const tab = document.createElement("button");
+      tab.className = "tab" + (name === state.activeFile ? " active" : "");
+      const [icon, kind] = fileIcon(name);
+      const i = document.createElement("i"); i.className = icon + " file-icon " + kind;
+      const label = document.createElement("span"); label.className = "tab-name"; label.textContent = name;
+      tab.append(i, label);
+      tab.addEventListener("click", () => openFile(name));
+      $("tabbar").append(tab);
+    });
+  }
+
+  function updateLanguageLabels() {
+    const lang = fileLanguage(state.activeFile);
+    const display = ({html:"HTML",css:"CSS",javascript:"JavaScript",json:"JSON",markdown:"Markdown",xml:"XML",plaintext:"Plain Text"})[lang] || "Plain Text";
+    $("breadcrumbName").textContent = state.activeFile;
+    $("languageLabel").textContent = display;
+    $("statusLanguage").textContent = display;
+  }
+
+  function loadActiveFile() {
+    const code = state.files[state.activeFile] ?? "";
+    updateLanguageLabels();
+    if (editor && editorReady) {
+      suppressEditorChange = true;
+      const model = monaco.editor.createModel(code, fileLanguage(state.activeFile));
+      const old = editor.getModel();
+      editor.setModel(model);
+      if (old) old.dispose();
+      currentModel = model;
+      suppressEditorChange = false;
+      editor.focus();
+    } else {
+      $("fallbackEditor").value = code;
+    }
+    updateCursorStatus();
+    renderTabs();
+  }
+
+  function openFile(name) {
+    if (state.files[name] === undefined) return;
+    syncActiveToState();
+    state.activeFile = name;
+    if (!state.openFiles.includes(name)) state.openFiles.push(name);
+    loadActiveFile(); renderFiles(); persist();
+    if (window.innerWidth <= 640) setMobileView("editor");
+  }
+
+  async function createFile() {
+    const name = await askModal({title:"ساخت فایل جدید", description:"نام فایل را با پسوند وارد کن؛ مثل app.js یا about.html.", placeholder:"example.js"});
+    if (!name) return;
+    if (/[\\\\/:*?"<>|]/.test(name) || name.startsWith(".")) { toast("نام فایل معتبر نیست."); return; }
+    if (state.files[name] !== undefined) { toast("فایلی با این نام وجود دارد."); return; }
+    syncActiveToState();
+    state.files[name] = "";
+    state.openFiles.push(name); state.activeFile = name;
+    loadActiveFile(); renderFiles(); persist(); toast("فایل جدید ساخته شد.");
+  }
+
+  async function renameProject() {
+    const name = await askModal({title:"نام پروژه", description:"یک نام ساده برای پروژه انتخاب کن.", placeholder:"my-zyvora-project", value:state.projectName});
+    if (!name) return;
+    state.projectName = name.replace(/[\\\\/:*?"<>|]/g, "-").trim() || "my-zyvora-project";
+    renderFiles(); persist(); toast("نام پروژه تغییر کرد.");
+  }
+
+  function setConsole(lines, type = "normal") {
+    $("consoleContent").replaceChildren();
+    const list = Array.isArray(lines) ? lines : [lines];
+    list.forEach(line => {
+      const div = document.createElement("div");
+      div.className = "console-line" + (type === "error" ? " error" : type === "success" ? " success" : "");
+      div.textContent = String(line);
+      $("consoleContent").append(div);
+    });
+  }
+
+  function buildPreviewDocument() {
+    const files = {...state.files};
+    const htmlName = files["index.html"] !== undefined ? "index.html" :
+      Object.keys(files).find(n => /\.html?$/i.test(n));
+    if (!htmlName) {
+      return `<!doctype html><html><body style="font:16px system-ui;padding:2rem"><h2>No HTML file found</h2><p>Create an index.html file to preview your project.</p></body></html>`;
+    }
+    let html = files[htmlName] || "";
+    const css = files["style.css"] || files["styles.css"] || "";
+    const js = files["script.js"] || files["app.js"] || "";
+    if (css) {
+      const styleTag = `<style>\n${css.replace(/<\/style/gi, "<\\/style")}\n</style>`;
+      if (/<\/head\s*>/i.test(html)) html = html.replace(/<\/head\s*>/i, styleTag + "\n</head>");
+      else html = styleTag + html;
+    }
+    if (js) {
+      const scriptTag = `<script>\n${js.replace(/<\/script/gi, "<\\/script")}\n<\/script>`;
+      if (/<\/body\s*>/i.test(html)) html = html.replace(/<\/body\s*>/i, scriptTag + "\n</body>");
+      else html += scriptTag;
+    }
+    const bridge = `<script>
+      (function(){
+        function send(type,args){
+          try{ parent.postMessage({source:"zyvora-preview",type:type,args:Array.from(args||[]).map(function(x){try{return typeof x==="string"?x:JSON.stringify(x)}catch(e){return String(x)}})}, "*"); }catch(e){}
+        }
+        ["log","info","warn","error"].forEach(function(k){
+          var old=console[k].bind(console);
+          console[k]=function(){old.apply(console,arguments);send(k,arguments);}
+        });
+        window.addEventListener("error",function(e){send("error",[e.message+" (line "+e.lineno+")"]);});
+      })();
+    <\/script>`;
+    if (/<head[^>]*>/i.test(html)) html = html.replace(/<head([^>]*)>/i, "<head$1>\n" + bridge);
+    else html = bridge + html;
+    return html;
+  }
+
+  function runProject() {
+    syncActiveToState();
+    persist();
+    const html = buildPreviewDocument();
+    $("previewFrame").srcdoc = html;
+    setConsole([
+      "▶ Running project preview…",
+      "Workspace files: " + Object.keys(state.files).length,
+      "Preview refreshed. Browser console messages will appear here."
+    ], "success");
+    $("statusMessage").textContent = "Preview updated";
+    if (window.innerWidth <= 640) setMobileView("preview");
+    else {
+      $("previewPanel").classList.remove("hidden");
+      $("previewPanel").style.display = "flex";
+      previewVisible = true;
+    }
+  }
+
+  function updateCursorStatus() {
+    const el = editorReady && editor ? editor : null;
+    if (el) {
+      const pos = el.getPosition();
+      if (pos) $("cursorStatus").textContent = `Ln ${pos.lineNumber}, Col ${pos.column}`;
+    } else {
+      const textarea = $("fallbackEditor");
+      const before = textarea.value.slice(0, textarea.selectionStart);
+      const lines = before.split("\n");
+      $("cursorStatus").textContent = `Ln ${lines.length}, Col ${lines[lines.length-1].length + 1}`;
+    }
+  }
+
+  function setMobileView(view) {
+    mobileView = view;
+    const isMobile = window.innerWidth <= 640;
+    $("sidebar").classList.toggle("mobile-open", isMobile && view === "files");
+    $("previewPanel").classList.toggle("mobile-open", isMobile && view === "preview");
+    $("aiPanel").classList.toggle("mobile-open", isMobile && view === "ai");
+    document.querySelectorAll("[data-mobile]").forEach(btn => btn.classList.toggle("active", btn.dataset.mobile === view));
+    if (isMobile && view === "editor") {
+      $("sidebar").classList.remove("mobile-open");
+      $("previewPanel").classList.remove("mobile-open");
+      $("aiPanel").classList.remove("mobile-open");
+    }
+  }
+
+  function showAI() {
+    $("aiPanel").classList.add("open");
+    if (window.innerWidth <= 640) setMobileView("ai");
+    else $("previewPanel").classList.add("hidden");
+    document.querySelectorAll(".activity-btn").forEach(b => b.classList.toggle("active", b.dataset.action === "ai"));
+  }
+
+  function showPreview() {
+    $("aiPanel").classList.remove("open");
+    $("previewPanel").classList.remove("hidden");
+    $("previewPanel").style.display = "flex";
+    previewVisible = true;
+    if (window.innerWidth <= 640) setMobileView("preview");
+    document.querySelectorAll(".activity-btn").forEach(b => b.classList.toggle("active", b.dataset.action === "files"));
+  }
+
+  async function downloadProject() {
+    syncActiveToState();
+    persist();
+    if (typeof JSZip === "undefined") {
+      toast("ابزار ZIP بارگذاری نشد. اتصال اینترنت را بررسی کن.");
+      return;
+    }
+    const zip = new JSZip();
+    Object.entries(state.files).forEach(([name, content]) => zip.file(name, content));
+    try {
+      const blob = await zip.generateAsync({type:"blob"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = (state.projectName || "zyvora-project") + ".zip";
+      document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+      toast("دانلود پروژه آغاز شد.");
+    } catch (e) { toast("ساخت ZIP ناموفق بود."); }
+  }
+
+  async function importFiles(fileList) {
+    const list = Array.from(fileList || []);
+    if (!list.length) return;
+    for (const file of list) {
+      const name = file.name.split(/[\\/]/).pop();
+      if (!name || /[\\\\/:*?"<>|]/.test(name)) continue;
+      try {
+        const text = await file.text();
+        state.files[name] = text;
+        if (!state.openFiles.includes(name)) state.openFiles.push(name);
+      } catch (_) {}
+    }
+    const last = list[list.length - 1].name.split(/[\\/]/).pop();
+    if (state.files[last] !== undefined) state.activeFile = last;
+    loadActiveFile(); renderFiles(); persist();
+    $("filePicker").value = "";
+    toast(`${list.length} فایل وارد شد.`);
+  }
+
+  function openFileFromDevice() { $("filePicker").click(); }
+
+  function showSearch() {
+    askModal({title:"جست‌وجو در پروژه", description:"عبارت مورد نظر را وارد کن. جست‌وجو در محتوای فایل‌های فعلی انجام می‌شود.", placeholder:"عبارت جست‌وجو"}).then(query => {
+      if (!query) return;
+      syncActiveToState();
+      const matches = [];
+      Object.entries(state.files).forEach(([name, content]) => {
+        String(content).split("\n").forEach((line, index) => {
+          if (line.toLowerCase().includes(query.toLowerCase())) matches.push(`${name}:${index+1}: ${line.trim()}`);
+        });
+      });
+      setConsole(matches.length ? matches.slice(0,100) : ["No matches found for: " + query], matches.length ? "normal" : "error");
+      $("statusMessage").textContent = `${matches.length} search result(s)`;
+      if (matches.length > 100) toast("۱۰۰ نتیجه اول نمایش داده شد.");
+    });
+  }
+
+  function showHelp() {
+    setConsole([
+      "ZYVORA CODE — QUICK GUIDE",
+      "• Select a file from Explorer to edit it.",
+      "• Run: refreshes the isolated live preview.",
+      "• Auto-save stores your project in this browser only.",
+      "• Download ZIP exports your project files.",
+      "• Import File adds local text/code files to this workspace.",
+      "• AI panel is a UI placeholder until connected to a secure API.",
+      "• Monaco Editor and JSZip require an internet connection.",
+      "• For production, avoid executing untrusted code."
+    ], "success");
+  }
+
+  function addAIMessage(role, text) {
+    const msg = document.createElement("div");
+    msg.style.cssText = "padding:10px;margin-bottom:8px;border:1px solid #30374a;border-radius:9px;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere";
+    msg.style.background = role === "user" ? "#211b36" : "#0d1017";
+    const title = document.createElement("div");
+    title.style.cssText = "font-size:10px;color:#a78bfa;font-weight:bold;margin-bottom:5px";
+    title.textContent = role === "user" ? "YOU" : "ZYVORA AI";
+    const body = document.createElement("div");
+    body.style.fontSize = "12px"; body.textContent = text;
+    msg.append(title, body); $("aiMessages").append(msg); msg.scrollIntoView({block:"nearest"});
+  }
+
+  $("aiForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const prompt = $("aiPrompt").value.trim();
+    if (!prompt) return;
+    addAIMessage("user", prompt);
+    addAIMessage("assistant", "رابط دستیار هنوز به سرویس هوش مصنوعی متصل نیست. برای دریافت پاسخ واقعی، یک API سازگار را از طریق بک‌اند یا پراکسی امن متصل کن. کلید خصوصی را داخل index.html قرار نده.");
+    $("aiPrompt").value = "";
+  });
+
+  $("runBtn").addEventListener("click", runProject);
+  $("refreshPreviewBtn").addEventListener("click", runProject);
+  $("downloadBtn").addEventListener("click", downloadProject);
+  $("importBtn").addEventListener("click", openFileFromDevice);
+  $("filePicker").addEventListener("change", e => importFiles(e.target.files));
+  $("newFileBtn").addEventListener("click", createFile);
+  $("renameProjectBtn").addEventListener("click", renameProject);
+  $("openFilesBtn").addEventListener("click", () => {
+    if (window.innerWidth <= 640) setMobileView(mobileView === "files" ? "editor" : "files");
+    else $("sidebar").classList.toggle("hidden");
+  });
+  $("settingsBtn").addEventListener("click", showHelp);
+  $("formatHintBtn").addEventListener("click", () => toast("برای قالب‌بندی، از فرمان‌های Monaco Editor استفاده کن."));
+  $("togglePreviewBtn").addEventListener("click", () => {
+    if (window.innerWidth <= 640) setMobileView("preview");
+    else if ($("previewPanel").classList.contains("hidden")) showPreview();
+    else $("previewPanel").classList.add("hidden");
+  });
+  $("closePreviewBtn").addEventListener("click", () => {
+    if (window.innerWidth <= 640) setMobileView("editor");
+    else { $("previewPanel").classList.add("hidden"); previewVisible = false; }
+  });
+  $("closeAiBtn").addEventListener("click", () => {
+    $("aiPanel").classList.remove("open", "mobile-open");
+    if (window.innerWidth <= 640) setMobileView("editor");
+    else showPreview();
+  });
+  $("popoutPreviewBtn").addEventListener("click", () => {
+    const blob = new Blob([buildPreviewDocument()], {type:"text/html"});
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank", "noopener");
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  });
+  document.querySelectorAll("[data-action]").forEach(btn => btn.addEventListener("click", () => {
+    const action = btn.dataset.action;
+    document.querySelectorAll(".activity-btn").forEach(b => b.classList.toggle("active", b === btn));
+    if (action === "files") {
+      $("aiPanel").classList.remove("open");
+      $("previewPanel").classList.remove("hidden");
+      if (window.innerWidth <= 640) setMobileView("files");
+    } else if (action === "ai") showAI();
+    else if (action === "search") showSearch();
+  }));
+  document.querySelectorAll("[data-mobile]").forEach(btn => btn.addEventListener("click", () => {
+    const view = btn.dataset.mobile;
+    if (view === "preview") { runProject(); return; }
+    if (view === "ai") { showAI(); return; }
+    setMobileView(view);
+  }));
+  document.querySelectorAll("[data-bottom]").forEach(btn => btn.addEventListener("click", () => {
+    document.querySelectorAll("[data-bottom]").forEach(b => b.classList.toggle("active", b === btn));
+    state.activeBottom = btn.dataset.bottom;
+    if (state.activeBottom === "problems") setConsole(["No problems detected by the workspace UI. Runtime errors appear in Console."], "success");
+    else if (state.activeBottom === "output") setConsole(["Output panel ready. Press Run to execute the current project preview."], "normal");
+    else setConsole(["Console ready. Press Run to refresh the preview."], "success");
+  }));
+
+  window.addEventListener("message", event => {
+    if (!event.data || event.data.source !== "zyvora-preview") return;
+    const {type, args} = event.data;
+    const line = `[preview ${type}] ${(args || []).join(" ")}`;
+    const node = document.createElement("div");
+    node.className = "console-line" + (type === "error" ? " error" : type === "warn" ? "" : "");
+    node.textContent = line;
+    $("consoleContent").append(node);
+  });
+
+  $("fallbackEditor").addEventListener("input", () => {
+    if (!editorReady) {
+      state.files[state.activeFile] = $("fallbackEditor").value;
+      persist();
+      updateCursorStatus();
+    }
+  });
+  $("fallbackEditor").addEventListener("keyup", updateCursorStatus);
+  $("fallbackEditor").addEventListener("click", updateCursorStatus);
+  $("fallbackEditor").addEventListener("keydown", e => {
+    if (e.key === "Tab") {
+      e.preventDefault();
+      const el = e.target, start = el.selectionStart, end = el.selectionEnd;
+      el.setRangeText("  ", start, end, "end");
+      el.dispatchEvent(new Event("input", {bubbles:true}));
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+      e.preventDefault(); persist(true);
+    }
+  });
+
+  restore();
+  renderFiles();
+  renderTabs();
+  $("fallbackEditor").value = state.files[state.activeFile] || "";
+  updateLanguageLabels();
+  setTimeout(runProject, 250);
+
+  // Monaco is optional: a working textarea remains available if its CDN fails.
+  if (typeof require === "function") {
+    require.config({ paths: { vs: "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min/vs" } });
+    window.MonacoEnvironment = {
+      getWorkerUrl: function() {
+        const code = `self.MonacoEnvironment={baseUrl:"https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min/"};importScripts("https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min/vs/base/worker/workerMain.js");`;
+        return "data:text/javascript;charset=utf-8," + encodeURIComponent(code);
+      }
+    };
+    require(["vs/editor/editor.main"], function() {
+      const host = $("editor");
+      $("fallbackEditor").classList.add("hidden");
+      editor = monaco.editor.create(host, {
+        value: state.files[state.activeFile] || "",
+        language: fileLanguage(state.activeFile),
+        theme: "vs-dark",
+        automaticLayout: true,
+        minimap: {enabled: window.innerWidth > 640},
+        fontSize: window.innerWidth <= 640 ? 12 : 13,
+        fontFamily: "'Cascadia Code', Consolas, monospace",
+        fontLigatures: true,
+        lineNumbers: "on",
+        scrollBeyondLastLine: false,
+        wordWrap: "on",
+        tabSize: 2,
+        padding: {top: 12, bottom: 12},
+        roundedSelection: true,
+        renderLineHighlight: "all",
+        scrollbar: {verticalScrollbarSize: 8, horizontalScrollbarSize: 8},
+        suggestOnTriggerCharacters: true
+      });
+      editorReady = true;
+      currentModel = editor.getModel();
+      editor.onDidChangeModelContent(() => {
+        if (suppressEditorChange) return;
+        state.files[state.activeFile] = editor.getValue();
+        $("saveState").textContent = "تغییرات ذخیره‌نشده…";
+        persist();
+      });
+      editor.onDidChangeCursorPosition(updateCursorStatus);
+      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => persist(true));
+      const fallbackResize = () => editor && editor.layout();
+      window.addEventListener("resize", fallbackResize);
+      loadActiveFile();
+      toast("Monaco Editor آماده است.");
+    }, function() {
+      toast("Monaco بارگذاری نشد؛ ویرایشگر ساده فعال است.");
+    });
+  } else {
+    toast("ویرایشگر ساده فعال است؛ برای Monaco اتصال اینترنت لازم است.");
+  }
+
+  let saveTimer;
+  document.addEventListener("visibilitychange", () => { if (document.hidden) persist(); });
+  window.addEventListener("beforeunload", () => { persist(); });
+  // Persist at a small debounce interval to reduce localStorage writes.
+  const originalPersist = persist;
+  persist = function(showState = false) {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => originalPersist(showState), showState ? 0 : 180);
+  };
+})();
+</script>
+</body>
+</html>
